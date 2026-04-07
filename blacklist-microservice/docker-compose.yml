@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://blacklist_user:blacklist_password@db:5432/blacklist_db
+      - JWT_SECRET_KEY=dev-secret-key-for-local-testing
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - blacklist-network
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_DB=blacklist_db
+      - POSTGRES_USER=blacklist_user
+      - POSTGRES_PASSWORD=blacklist_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blacklist_user -d blacklist_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - blacklist-network
+
+volumes:
+  postgres_data:
+
+networks:
+  blacklist-network:
+    driver: bridge
