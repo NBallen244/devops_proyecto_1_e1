@@ -30,13 +30,14 @@ def create_app():
     def health_check():
         return {'status': 'healthy', 'service': 'blacklist-microservice'}, 200
     
-    @app.route('/token', methods=['POST'])
+    @app.route('/token', methods=['GET'])
     def get_token():
         token = create_static_token(app)
         return {'access_token': token}, 200
     
     return app
 
+application = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    application.run(debug=True, host='0.0.0.0', port=5000)
