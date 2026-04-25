@@ -6,9 +6,13 @@ from app.schemas.blacklist_schema import ma
 from app.auth import jwt, create_static_token
 from app.resources.blacklist_resource import BlacklistResource, BlacklistCheckResource
 
-def create_app():
+def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    
+    if test_config:
+        app.config.update(test_config)
+    else:
+        app.config.from_object(Config)
     
     # Initialize extensions
     db.init_app(app)
@@ -22,9 +26,10 @@ def create_app():
     api.add_resource(BlacklistResource, '/blacklists')
     api.add_resource(BlacklistCheckResource, '/blacklists/<string:email>')
     
-    # Create database tables
-    with app.app_context():
-        db.create_all()
+    # Create database tables only if not testing
+    if not app.config.get('TESTING'):
+        with app.app_context():
+            db.create_all()
     
     @app.route('/health', methods=['GET'])
     def health_check():
